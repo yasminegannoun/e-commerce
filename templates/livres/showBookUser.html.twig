@@ -4,6 +4,15 @@
 
 {% block body %}
     <h1>Liste des livres</h1>
+    
+    <!-- Search form -->
+    <form action="{{ path('admin_livres_recherche') }}" method="GET" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Rechercher un livre..." aria-label="Rechercher un livre" aria-describedby="button-addon2">
+            <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Rechercher</button>
+        </div>
+    </form>
+    
     <div class="row">
         {% for livre in livres %}
             <div class="col-md-4 mb-4">
@@ -16,8 +25,6 @@
                         <p class="card-text">Date Edition: {{ livre.editedAt|date('d-m-Y') }}</p>
                         <p class="card-text">Prix(DT): {{ livre.prix }}</p>
                         <a href="{{ url('admin_livres_show', {'id': livre.id}) }}" class="btn btn-success">Voir détail</a>
-                        <a href="" class="btn btn-danger">Supprimer</a>
-                        <a href="" class="btn btn-primary">Editer</a>
                     </div>
                 </div>
             </div>

@@ -10,21 +10,24 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-#[IsGranted('ROLE_ADMIN')]
+
 class LivresController extends AbstractController
 {
-    #[Route('/admin/livres', name: 'admin_livres')]
-
-    public function index(LivresRepository $rep): Response
+    #[Route('/livres', name: 'admin_livres')]
+    public function index(LivresRepository $rep, AuthorizationCheckerInterface $authChecker): Response
     {
         $livres = $rep->findAll();
-        //dd($livres);
-        return $this->render('Livres/index.html.twig', ['livres' => $livres]);
+        if ($authChecker->isGranted('ROLE_ADMIN')) {
+            return $this->render('Livres/index.html.twig', ['livres' => $livres]);
+        } else {
+            return $this->render('Livres/showBookUser.html.twig', ['livres' => $livres]);
+        }
     }
-    #[Route('/admin/livres/show/{id}', name: 'admin_livres_show')]
+    #[Route('/livres/show/{id}', name: 'admin_livres_show')]
     public function show(Livres $livre): Response
     {
 
@@ -61,6 +64,7 @@ class LivresController extends AbstractController
         dd($livre1);
     }
     #[Route('/admin/livres/delete/{id}', name: 'app_admin_livres_delete')]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(EntityManagerInterface $em, Livres $livre): Response
     {
 
@@ -69,6 +73,7 @@ class LivresController extends AbstractController
         dd($livre);
     }
     #[Route('/admin/livres/add', name: 'admin_livres_add')]
+    #[IsGranted('ROLE_ADMIN')]
     public function add(EntityManagerInterface $em, Request $request): Response
     {
         $livre = new Livres();
@@ -87,4 +92,20 @@ class LivresController extends AbstractController
 
         ]);
     }
+
+    #[Route('/livres/recherche', name: 'admin_livres_recherche')]
+public function recherche(Request $request, LivresRepository $livresRepository): Response
+{
+    $searchTerm = $request->query->get('q'); // Obtenez le terme de recherche depuis l'URL
+    
+    // Effectuez une recherche dans la base de données en utilisant le terme de recherche
+    $livres = $livresRepository->findBySearchTerm($searchTerm);
+
+    // Passez les résultats à votre modèle Twig pour affichage
+    return $this->render('Livres/showBookUser.html.twig', [
+        'livres' => $livres,
+        'searchTerm' => $searchTerm,
+    ]);
+
+}
 }
