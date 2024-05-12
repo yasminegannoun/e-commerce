@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Check Your Email{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">Registration Successful!</h4>
+            <p>A confirmation email has been sent to <strong>{{ email }}</strong>. Please check your email inbox (and spam folder) for a verification link. Click on the link to verify your email address and complete the registration process.</p>
+            <hr>
+            <p class="mb-0">Didn't receive the email? <a href="{{ path('app_register') }}">Click here</a> to resend the verification email.</p>
+        </div>
+    </div>
+{% endblock %}
