@@ -19,6 +19,8 @@
     <input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
     <label for="inputPassword">Password</label>
     <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
+    {# <input type="image" id="togglePassword" src="{{asset('/public/images/view.png')}}" alt="" aria-label="Toggle password visibility"> #}
+    
 
     <input type="hidden" name="_csrf_token"
            value="{{ csrf_token('authenticate') }}"
@@ -28,4 +30,17 @@
         Sign in
     </button>
 </form>
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        var passwordInput = document.getElementById('inputPassword');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            this.textContent = 'Hide Password';
+        } else {
+            passwordInput.type = 'password';
+            this.textContent = 'Show Password';
+        }
+    });
+</script>
 {% endblock %}

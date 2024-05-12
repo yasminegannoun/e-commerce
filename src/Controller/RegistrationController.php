@@ -20,6 +20,7 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
+
     private EmailVerifier $emailVerifier;
 
     public function __construct(EmailVerifier $emailVerifier)
@@ -54,13 +55,11 @@ class RegistrationController extends AbstractController
                     ->subject('Please Confirm your Email')
                     ->htmlTemplate('registration/confirmation_email.html.twig')
             );
-            // do anything else you need here, like send an email
 
-            return $userAuthenticator->authenticateUser(
-                $user,
-                $authenticator,
-                $request
-            );
+            // Redirect the user to a page informing them to check their email for verification
+            return $this->render('registration/check_email.html.twig', [
+                'email' => $user->getEmail(),
+            ]);
         }
 
         return $this->render('registration/register.html.twig', [
