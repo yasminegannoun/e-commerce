@@ -3,7 +3,14 @@
 {% block title %}Accueil{% endblock %}
 
 {% block body %}
+
     <h1>Liste des livres</h1>
+
+    <form id="search-form" action="{{ path('admin_livres_recherche') }}" method="GET" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" id="search-input" class="form-control" placeholder="Rechercher un livre..." aria-label="Rechercher un livre" aria-describedby="button-addon2">
+        </div>
+    </form>
     <div class="row">
         {% for livre in livres %}
             <div class="col-md-4 mb-4">
@@ -21,6 +28,37 @@
                     </div>
                 </div>
             </div>
+            
         {% endfor %}
     </div>
+     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var searchInput = document.getElementById('search-input');
+            var searchForm = document.getElementById('search-form');
+            var searchResultsContainer = document.getElementById('search-results-container');
+
+            searchInput.addEventListener('input', function() {
+                var searchTerm = searchInput.value.trim();
+                if (searchTerm.length > 0) {
+                   
+                    var xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === XMLHttpRequest.DONE) {
+                            if (xhr.status === 200) {
+                            
+                                searchResultsContainer.innerHTML = xhr.responseText;
+                            } else {
+                                console.error('Une erreur s\'est produite.');
+                            }
+                        }
+                    };
+                    xhr.open('GET', searchForm.getAttribute('action') + '?q=' + encodeURIComponent(searchTerm), true);
+                    xhr.send();
+                } else {
+                    
+                    searchResultsContainer.innerHTML = '';
+                }
+            });
+        });
+    </script>
 {% endblock %}

@@ -25,6 +25,34 @@ class LivresRepository extends ServiceEntityRepository
 //    /**
 //     * @return Livres[] Returns an array of Livres objects
 //     */
+public function findBySearchCriteria(string $searchTerm, ?int $categoryId, string $author): array
+{
+    $queryBuilder = $this->createQueryBuilder('l');
+
+    if (!empty($searchTerm)) {
+        $queryBuilder
+            ->andWhere('l.titre LIKE :searchTerm')
+            ->setParameter('searchTerm', '%' . $searchTerm . '%');
+    }
+
+    if ($categoryId !== null) {
+        $queryBuilder
+            ->andWhere('l.categorie = :categoryId')
+            ->setParameter('categoryId', $categoryId);
+    }
+
+    if (!empty($author)) {
+        $queryBuilder
+            ->andWhere('l.Auteur LIKE :author')
+            ->setParameter('author', '%' . $author . '%');
+    }
+
+    return $queryBuilder
+        ->getQuery()
+        ->getResult();
+}
+
+
 //    public function findByExampleField($value): array
 //    {
 //        return $this->createQueryBuilder('l')

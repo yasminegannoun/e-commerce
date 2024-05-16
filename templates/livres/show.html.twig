@@ -1,22 +1,50 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Accueil
-{% endblock %}
+{% block title %}Accueil{% endblock %}
+
 {% block body %}
-	<h1>détail du livre
-		{{livre.titre|capitalize}}
-		({{livre.prix}}
-		DT)</h1>
-	<div class="row">
-		<div class="col-3">
-			<img src="{{livre.image}}" alt="">
-		</div>
-		<h4>ISBN :{{livre.isbn}}</h4>
-		<h4>Editeur :
-			{{livre.editeur}}</h4>
-		<h4>Date Edition :
-			{{livre.editedAt|date('d-m-Y')}}</h4>
-		<p>
-			{{livre.resume}}</p>
-	</table>
-</p></div>{% endblock %}
+    <div class="container">
+        <h1 class="text-center">Détail du livre</h1>
+        <div class="row">
+            <div class="col-md-3">
+                <img src="{{ livre.image }}" alt="{{ livre.titre }}" class="img-fluid">
+				<h3>{{ livre.titre|capitalize }}</h3>
+				<h5>{{ livre.auteur }}</h5>
+            </div>
+            <div class="col-md-9">
+                <h2>{{ livre.titre|capitalize }}</h2>
+                <p><strong>Prix:</strong> {{ livre.prix }} DT</p>
+              
+                <p><strong>Auteur:</strong> {{ livre.auteur }}</p>
+                <p><strong>Editeur:</strong> {{ livre.editeur }}</p>
+                <p><strong>Date d'édition:</strong> {{ livre.editedAt|date('d-m-Y') }}</p>
+                <p>{{ livre.resume }}</p>
+                
+                <!-- Add review form -->
+                <form id="review-form" action="" method="post">
+                    <div class="form-group">
+                        <label for="review">Ajouter un avis:</label>
+                        <textarea class="form-control" id="review" name="review" rows="4" placeholder="Saisissez votre avis"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Soumettre</button>
+                </form>
+                
+                <!-- Display submitted reviews -->
+                <div id="reviews-container">
+                    <!-- Reviews will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('review-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+            const reviewContent = document.getElementById('review').value; // Get the review content
+            const reviewElement = document.createElement('p'); // Create a new paragraph element
+            reviewElement.textContent = reviewContent; // Set the review content as text
+            document.getElementById('reviews-container').appendChild(reviewElement); // Append the review to the reviews container
+            document.getElementById('review').value = ''; // Clear the review textarea
+        });
+    </script>
+{% endblock %}
