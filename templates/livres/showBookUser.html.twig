@@ -25,6 +25,7 @@
                         <p class="card-text">Date Edition: {{ livre.editedAt|date('d-m-Y') }}</p>
                         <p class="card-text">Prix(DT): {{ livre.prix }}</p>
                         <a href="{{ url('admin_livres_show', {'id': livre.id}) }}" class="btn btn-success">Voir détail</a>
+                        <a href="{{ url('panier_ajouter_livre', {'id': livre.id}) }}" class="btn btn-primary">Ajouter au panier</a>
                     </div>
                 </div>
             </div>
