@@ -6,6 +6,7 @@ use DateTime;
 use App\Entity\Livres;
 use App\Form\LivreType;
 use App\Repository\LivresRepository;
+use App\Repository\CategoriesRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,15 +19,17 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 class LivresController extends AbstractController
 {
     #[Route('/livres', name: 'admin_livres')]
-    public function index(LivresRepository $rep, AuthorizationCheckerInterface $authChecker): Response
-    {
-        $livres = $rep->findAll();
-        if ($authChecker->isGranted('ROLE_ADMIN')) {
-            return $this->render('Livres/index.html.twig', ['livres' => $livres]);
-        } else {
-            return $this->render('Livres/showBookUser.html.twig', ['livres' => $livres]);
-        }
+    public function index(LivresRepository $rep, CategoriesRepository $categoriesRepository, AuthorizationCheckerInterface $authChecker): Response
+{
+    $livres = $rep->findAll();
+    $categories = $categoriesRepository->findAll(); // Fetch categories
+    if ($authChecker->isGranted('ROLE_ADMIN')) {
+        return $this->render('Livres/index.html.twig', ['livres' => $livres, 'categories' => $categories]);
+    } else {
+        return $this->render('Livres/showBookUser.html.twig', ['livres' => $livres, 'categories' => $categories]);
     }
+}
+
     #[Route('/livres/show/{id}', name: 'admin_livres_show')]
     public function show(Livres $livre): Response
     {
@@ -93,19 +96,32 @@ class LivresController extends AbstractController
         ]);
     }
 
-    #[Route('/livres/recherche', name: 'admin_livres_recherche')]
-public function recherche(Request $request, LivresRepository $livresRepository): Response
-{
-    $searchTerm = $request->query->get('q'); // Obtenez le terme de recherche depuis l'URL
+    #[Route('/livres/recherche', name: 'user_livres_recherche')]
+    public function recherche(Request $request, LivresRepository $livresRepository, CategoriesRepository $categoriesRepository): Response
+    {
+        // Get the search parameters from the request
+        $searchTerm = $request->query->get('titre') ?? ''; // Title
+        $categoryId = $request->query->get('categorie') ?? null; // Category ID
+        $author = $request->query->get('auteur') ?? ''; // Author
     
-    // Effectuez une recherche dans la base de données en utilisant le terme de recherche
-    $livres = $livresRepository->findBySearchTerm($searchTerm);
+        // Call the repository method to fetch categories
+        $categories = $categoriesRepository->findAll();
+    
+        // Call the repository method with the search criteria
+        $livres = $livresRepository->findBySearchCriteria($searchTerm, $categoryId, $author);
+    
+        // Return the search results and categories to the appropriate template
+        return $this->render('Livres/recherche.html.twig', [
+            'livres' => $livres,
+            'categories' => $categories,
+        ]);
+    }
+    
+    
+    
+    
 
-    // Passez les résultats à votre modèle Twig pour affichage
-    return $this->render('Livres/showBookUser.html.twig', [
-        'livres' => $livres,
-        'searchTerm' => $searchTerm,
-    ]);
 
-}
+
+    
 }

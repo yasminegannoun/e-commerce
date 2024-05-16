@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+
+
+{% block body %}
+ 
+    
+    <div class="row" id="search-results-container">
+        {% if livres is not empty %}
+            {% for livre in livres %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ livre.image }}" class="card-img-top" alt="Book Image">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ livre.titre|capitalize }}</h5>
+                            <p class="card-text">Auteur: {{ livre.auteur }}</p>
+                            <p class="card-text">ISBN: {{ livre.isbn }}</p>
+                            <p class="card-text">Editeur: {{ livre.editeur }}</p>
+                            <p class="card-text">Date Edition: {{ livre.editedAt|date('d-m-Y') }}</p>
+                            <p class="card-text">Prix(DT): {{ livre.prix }}</p>
+                            <p class="card-text">Catégorie: {{ livre.categorie.libelle }}</p>
+                            <a href="{{ path('admin_livres_show', {'id': livre.id}) }}" class="btn btn-success">Voir détail</a>
+                            <a href="#" class="btn btn-success">Ajouter au panier</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Aucun livre trouvé pour cette recherche.</p>
+        {% endif %}
+    </div>
+{% endblock %}
