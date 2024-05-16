@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\LivresRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -46,6 +48,17 @@ class Livres
 
     #[ORM\ManyToOne(inversedBy: 'livres')]
     private ?Categories $categorie = null;
+
+    #[ORM\OneToMany(targetEntity: DetailsLivre::class, mappedBy: 'livre')]
+    private Collection $detailsLivres;
+
+    #[ORM\ManyToOne(inversedBy: 'livres')]
+    private ?Panier $panier = null;
+
+    public function __construct()
+    {
+        $this->detailsLivres = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -180,6 +193,48 @@ class Livres
     public function setCategorie(?Categories $categorie): static
     {
         $this->categorie = $categorie;
+
+        return $this;
+    }
+
+    public function getPanier(): ?Panier
+    {
+        return $this->panier;
+    }
+
+    public function setPanier(?Panier $panier): static
+    {
+        $this->panier = $panier;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DetailsLivre>
+     */
+    public function getDetailsLivres(): Collection
+    {
+        return $this->detailsLivres;
+    }
+
+    public function addDetailsLivre(DetailsLivre $detailsLivre): self
+    {
+        if (!$this->detailsLivres->contains($detailsLivre)) {
+            $this->detailsLivres[] = $detailsLivre;
+            $detailsLivre->setLivre($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDetailsLivre(DetailsLivre $detailsLivre): self
+    {
+        if ($this->detailsLivres->removeElement($detailsLivre)) {
+            // set the owning side to null (unless already changed)
+            if ($detailsLivre->getLivre() === $this) {
+                $detailsLivre->setLivre(null);
+            }
+        }
 
         return $this;
     }

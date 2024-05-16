@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Panier{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <h1>Votre Panier</h1>
+        {% for detailLivre in detailsLivres %}
+            <div class="col-md-4 mb-4 livre" data-livre="{{ detailLivre.getLivre().getId() }}">
+                <div class="card">
+                    <img src="{{ detailLivre.getLivre().getImage() }}" class="card-img-top" alt="Book Image">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ detailLivre.getLivre().getTitre()|capitalize }}</h5>
+                        <p class="card-text">Prix(DT): {{ detailLivre.getLivre().getPrix() }}</p>
+                        <p class="card-text">Date ajout: {{detailLivre.getdate()|date('d-m-Y')}}</p>
+                        <h4 class="qte">Quantité</h4>  
+                        <div class="cadre">
+                            <span class="quantite">{{ detailLivre.getQuantite() }}</span>
+                            <button class="plus" data-livre="{{ detailLivre.getLivre().getId() }}">+</button>
+                            <button class="moins" data-livre="{{ detailLivre.getLivre().getId() }}">-</button>
+                        </div>
+                        <br> <br>
+                        <a href="{{ url('panier_supprimer_livre', {'id': detailLivre.getLivre().getId()}) }}" class="btn btn-danger">Supprimer</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const plusButtons = document.querySelectorAll('.plus');
+    const moinsButtons = document.querySelectorAll('.moins');
+
+    plusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const detailLivreId = this.getAttribute('data-livre');
+            augmenterQuantite(detailLivreId);
+        });
+    });
+
+    moinsButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const detailLivreId = this.getAttribute('data-livre');
+            diminuerQuantite(detailLivreId);
+        });
+    });
+
+    function augmenterQuantite(detailLivreId) {
+        fetch(`/panier/ajouter-quantite/${detailLivreId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour la valeur affichée dans l'élément de quantité
+            document.querySelector(`.livre[data-livre="${detailLivreId}"] .quantite`).textContent = data.nouvelleQuantite;
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+        });
+    }
+
+    function diminuerQuantite(detailLivreId) {
+        fetch(`/panier/diminuer-quantite/${detailLivreId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour la valeur affichée dans l'élément de quantité
+            document.querySelector(`.livre[data-livre="${detailLivreId}"] .quantite`).textContent = data.nouvelleQuantite;
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+        });
+    }
+});
+    </script>
+
+    <style>
+        .cadre {
+            display: inline-block;
+            border: 1px solid #ccc;
+            background-color: #f2f2f2;
+            padding: 5px 10px;
+        }
+
+        .cadre .plus, 
+        .cadre .moins {
+            border: none;
+            background: none;
+            cursor: pointer; 
+        }
+    </style>
+{% endblock %}
