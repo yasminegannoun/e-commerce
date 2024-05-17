@@ -6,10 +6,12 @@
 
 <h1>Liste des livres</h1>
 
+
 <!-- Add Book button -->
 <div class="mb-4">
     <a href="{{ path('admin_livres_add') }}" class="btn btn-success">Ajouter un livre</a>
 </div>
+
 
 <!-- Search form -->
 <form id="search-form" action="{{ path('user_livres_recherche') }}" method="GET" class="mb-4">
@@ -38,8 +40,10 @@
                     <p class="card-text">Date Edition: {{ livre.editedAt|date('d-m-Y') }}</p>
                     <p class="card-text">Prix(DT): {{ livre.prix }}</p>
                     <a href="{{ url('admin_livres_show', {'id': livre.id}) }}" class="btn btn-success">Voir détail</a>
+
                     <a href="{{ url('app_livre_edit', {'id': livre.id}) }}" class="btn btn-primary">Editer</a>
                     <form method="post" action="{{ path('app_admin_livres_delete', {'id': livre.id}) }}" onsubmit="return confirm('Are you sure you want to delete this item?');" class="d-inline">
+
                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ livre.id) }}">
                         <button type="submit" class="btn btn-danger">Supprimer</button>
                     </form>
