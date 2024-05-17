@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 
@@ -36,45 +37,26 @@ class LivresController extends AbstractController
 
         return $this->render('Livres/show.html.twig', ['livre' => $livre]);
     }
-    #[Route('/admin/livres/create', name: 'app_admin_livres_create')]
-    public function create(EntityManagerInterface $em): Response
-    {
-        $livre1 = new Livres();
-        $livre1->setAuteur('auteur 1')
-            ->setEditedAt(new \DateTimeImmutable('01-01-2023'))
-            ->setTitre('Titre 4')
-            ->setQte(100)
-            ->setResume('jhgkjhkjhlhdjfjfdgpghkgmgbkmgblkgm')
-            ->setSlug('titre-4')
-            ->setPrix(200)
-            ->setEditeur('Eni')
-            ->setISBN('111.1111.1111.1115')
-            ->setImage('https://picsum.photos/300');
-        $livre2 = new Livres();
-        $livre2->setAuteur('auteur 3')
-            ->setEditedAt(new \DateTimeImmutable('01-01-2023'))
-            ->setTitre('Titre 4')
-            ->setQte(100)
-            ->setResume('jhgkjhkjhlhdjfjfdgpghkgmgbkmgblkgm')
-            ->setSlug('titre-4')
-            ->setPrix(200)
-            ->setEditeur('Eni')
-            ->setISBN('111.1111.1111.1115')
-            ->setImage('https://picsum.photos/300');
-        $em->persist($livre1);
-        $em->persist($livre2);
-        $em->flush();
-        dd($livre1);
-    }
-    #[Route('/admin/livres/delete/{id}', name: 'app_admin_livres_delete')]
-    #[IsGranted('ROLE_ADMIN')]
-    public function delete(EntityManagerInterface $em, Livres $livre): Response
-    {
+  
 
-        $em->remove($livre);
-        $em->flush();
-        dd($livre);
+
+    #[Route('/admin/livres/delete/{id}', name: 'app_admin_livres_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function delete(Request $request, Livres $livre, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$livre->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($livre);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('admin_livres', [], Response::HTTP_SEE_OTHER);
     }
+
+
+
+
+
+
     #[Route('/admin/livres/add', name: 'admin_livres_add')]
     #[IsGranted('ROLE_ADMIN')]
     public function add(EntityManagerInterface $em, Request $request): Response

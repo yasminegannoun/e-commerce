@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Categories index{% endblock %}
+
+{% block body %}
+    <h1>Categories index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Libelle</th>
+                <th>Slug</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for category in categories %}
+            <tr>
+                <td>{{ category.id }}</td>
+                <td>{{ category.libelle }}</td>
+                <td>{{ category.slug }}</td>
+                <td>{{ category.description }}</td>
+                <td>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ path('app_categories_show', {'id': category.id}) }}" class="btn btn-info btn-sm">Show</a>
+                        <a href="{{ path('app_categories_edit', {'id': category.id}) }}" class="btn btn-primary btn-sm">Edit</a>
+                        <form method="post" action="{{ path('app_categories_delete', {'id': category.id}) }}" onsubmit="return confirm('Are you sure you want to delete this item?');" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ category.id) }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">No records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_categories_new') }}" class="btn btn-success mt-3">Create new</a>
+{% endblock %}
