@@ -7,11 +7,15 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    const ROLE_USER = 1;
+    const ROLE_ADMIN = 2;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -21,11 +25,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
     #[ORM\Column]
-    private array $roles = [];
+    #[Assert\Choice([self::ROLE_ADMIN, self::ROLE_USER])]
+    private int $role;
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
     private ?string $password = null;
 
@@ -52,53 +54,44 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
+        return match ($this->getRole()) {
+            self::ROLE_ADMIN => ['ROLE_ADMIN'],
+            self::ROLE_USER => ['ROLE_USER'],
+            default => ['ROLE_USER'], 
+            };
     }
 
-    public function setRoles(array $roles): static
+    public function getRole(): ?int
     {
-        $this->roles = $roles;
-
-        return $this;
+        return $this->role;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
+    public function setRole(int $role): self
+    {
+        $this->role = $role;
+
+        return $this; 
+    }
+
     public function getPassword(): string
     {
         return $this->password;
     }
 
-    public function setPassword(string $password): static
+    public function setPassword(string $password): self
     {
         $this->password = $password;
 
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
@@ -110,7 +103,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->isVerified;
     }
 
-    public function setIsVerified(bool $isVerified): static
+    public function setIsVerified(bool $isVerified): self
     {
         $this->isVerified = $isVerified;
 
@@ -122,14 +115,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->panier;
     }
 
-    public function setPanier(?Panier $panier): static
+    public function setPanier(?Panier $panier): self
     {
-        // unset the owning side of the relation if necessary
         if ($panier === null && $this->panier !== null) {
             $this->panier->setUser(null);
         }
 
-        // set the owning side of the relation if necessary
         if ($panier !== null && $panier->getUser() !== $this) {
             $panier->setUser($this);
         }
@@ -139,4 +130,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function __toString(): string
+    {
+        return $this->email ?? ''; 
+    }
 }
