@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\DetailCommande;
 use App\Repository\PanierRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -16,7 +17,7 @@ class Panier
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToOne(inversedBy: 'panier', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: User::class, inversedBy: 'panier', cascade: ['persist', 'remove'])]
     private ?User $user = null;
    
 

@@ -17,7 +17,7 @@ class DetailsLivre
     #[ORM\ManyToOne(targetEntity: Panier::class, inversedBy: 'details')]
     private ?Panier $panier = null;
 
-    #[ORM\ManyToOne(targetEntity: Livres::class)]
+    #[ORM\ManyToOne(targetEntity: Livres::class , inversedBy: 'details')]
     private ?Livres $livre = null;
 
     #[ORM\Column]

@@ -2,21 +2,23 @@
 
 namespace App\Controller;
 
-use App\Entity\Panier;
-use App\Entity\Livres;
-use App\Entity\DetailsLivre;
 use Stripe\Stripe;
+use App\Entity\Livres;
+use App\Entity\Panier;
+use App\Entity\Commande;
+use App\Entity\DetailsLivre;
 use Stripe\Checkout\Session;
-use Stripe\Exception\ApiErrorException;
+use App\Entity\DetailCommande;
 use App\Repository\PanierRepository;
+use Stripe\Exception\ApiErrorException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 
 
@@ -187,47 +189,76 @@ public function ajouterQuantite(Request $request, EntityManagerInterface $entity
     public function commander(Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-        if (!$user) {
-            return $this->redirectToRoute('app_login');
-        }
+    if (!$user) {
+        return $this->redirectToRoute('app_login');
+    }
 
-        $panier = $user->getPanier();
-        if (!$panier) {
-            // Handle empty cart
-            return $this->redirectToRoute('panier_index');
-        }
+    $panier = $user->getPanier();
+    if (!$panier) {
+        // Gérer le panier vide
+        return $this->redirectToRoute('panier_index');
+    }
 
-        Stripe::setApiKey($this->getParameter('stripe_secret_key'));
+    Stripe::setApiKey($this->getParameter('stripe_secret_key'));
 
-        $lineItems = [];
-        foreach ($panier->getDetails() as $detailsLivre) {
-            $lineItems[] = [
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => $detailsLivre->getLivre()->getTitre(),
-                    ],
-                    'unit_amount' => $detailsLivre->getPrix() * 100,
+    $lineItems = [];
+    foreach ($panier->getDetails() as $detailsLivre) {
+        $lineItems[] = [
+            'price_data' => [
+                'currency' => 'usd',
+                'product_data' => [
+                    'name' => $detailsLivre->getLivre()->getTitre(),
                 ],
-                'quantity' => $detailsLivre->getQuantite(),
-            ];
+                'unit_amount' => $detailsLivre->getPrix() * 100,
+            ],
+            'quantity' => $detailsLivre->getQuantite(),
+        ];
+    }
+
+    try {
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [$lineItems],
+            'mode' => 'payment',
+            'success_url' => $this->generateUrl('panier_commande_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            'cancel_url' => $this->generateUrl('panier_index', [], UrlGeneratorInterface::ABSOLUTE_URL),
+        ]);
+
+        // Créer une nouvelle commande
+        $commande = new Commande();
+        $commande->setUser($user);
+        $commande->setDate(new \DateTime());
+        $commande->setStatus('En attente');
+        $total = 0;
+
+        foreach ($panier->getDetails() as $detailsLivre) {
+            // Créer un détail de commande pour chaque détail de livre dans le panier
+            $detailCommande = new DetailCommande();
+            $detailCommande->setLivre($detailsLivre->getLivre());
+            $detailCommande->setQuantite($detailsLivre->getQuantite());
+            $detailCommande->setPrix($detailsLivre->getPrix());
+            $detailCommande->setCommande($commande);
+
+            $total += $detailsLivre->getQuantite() * $detailsLivre->getPrix();
+
+            $entityManager->persist($detailCommande);
+
+            // Supprimer le détail de livre du panier
+            $panier->removeDetail($detailsLivre);
+            $entityManager->remove($detailsLivre);
         }
 
-        try {
-            $session = Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [$lineItems],
-                'mode' => 'payment',
-                'success_url' => $this->generateUrl('panier_commande_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
-                'cancel_url' => $this->generateUrl('panier_index', [], UrlGeneratorInterface::ABSOLUTE_URL),
-            ]);
+        $commande->setTotal($total);
+        $entityManager->persist($commande);
 
-            return $this->redirect($session->url, 303);
-        } catch (ApiErrorException $e) {
-            // Log the error
-            $this->addFlash('error', 'Une erreur est survenue lors de la création de la session de paiement. Veuillez réessayer plus tard.');
-            return $this->redirectToRoute('panier_index');
-        }
+        $entityManager->flush();
+
+        return $this->redirect($session->url, 303);
+    } catch (ApiErrorException $e) {
+        // Log the error
+        $this->addFlash('error', 'Une erreur est survenue lors de la création de la session de paiement. Veuillez réessayer plus tard.');
+        return $this->redirectToRoute('panier_index');
+    }
     }
 
     #[Route('/panier/commande-success', name: 'panier_commande_success')]
