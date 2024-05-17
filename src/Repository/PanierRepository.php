@@ -22,6 +22,16 @@ class PanierRepository extends ServiceEntityRepository
         parent::__construct($registry, Panier::class);
     }
 
+    public function findLivresInPanier(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.livres', 'l') 
+            ->where('p.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getResult();
+    }
+
 //    /**
 //     * @return Panier[] Returns an array of Panier objects
 //     */
@@ -47,13 +57,5 @@ class PanierRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-    public function findLivresInPanier(User $user): array
-    {
-        return $this->createQueryBuilder('p')
-            ->join('p.livres', 'l') 
-            ->where('p.user = :user')
-            ->setParameter('user', $user)
-            ->getQuery()
-            ->getResult();
-    }
+    
 }

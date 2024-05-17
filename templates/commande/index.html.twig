@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique des commandes{% endblock %}
+
+{% block body %}
+<h1>Historique des commandes</h1>
+
+{% if commandes is empty %}
+    <p>Vous n'avez pas encore passé de commande.</p>
+{% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for commande in commandes %}
+                <tr>
+                    <td>{{ commande.id }}</td>
+                    <td>{{ commande.date|date('Y-m-d H:i') }}</td>
+                    <td>{{ commande.total }}</td>
+                    <td>{{ commande.status }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock %}

@@ -55,9 +55,13 @@ class Livres
     #[ORM\ManyToOne(inversedBy: 'livres')]
     private ?Panier $panier = null;
 
+    #[ORM\OneToMany(targetEntity: DetailCommande::class, mappedBy: 'livre')]
+    private Collection $detailCommandes;
+
     public function __construct()
     {
         $this->detailsLivres = new ArrayCollection();
+        $this->detailCommandes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -233,6 +237,36 @@ class Livres
             // set the owning side to null (unless already changed)
             if ($detailsLivre->getLivre() === $this) {
                 $detailsLivre->setLivre(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DetailCommande>
+     */
+    public function getDetailCommandes(): Collection
+    {
+        return $this->detailCommandes;
+    }
+
+    public function addDetailCommande(DetailCommande $detailCommande): static
+    {
+        if (!$this->detailCommandes->contains($detailCommande)) {
+            $this->detailCommandes->add($detailCommande);
+            $detailCommande->setLivre($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDetailCommande(DetailCommande $detailCommande): static
+    {
+        if ($this->detailCommandes->removeElement($detailCommande)) {
+            // set the owning side to null (unless already changed)
+            if ($detailCommande->getLivre() === $this) {
+                $detailCommande->setLivre(null);
             }
         }
 
