@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Entity\Panier;
 use App\Entity\Livres;
 use App\Entity\DetailsLivre;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use Stripe\Exception\ApiErrorException;
 use App\Repository\PanierRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,6 +16,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
 
 
 
@@ -25,15 +30,21 @@ class PanierController extends AbstractController
     {
         $user = $this->getUser();
         $detailsLivres = [];
+        $totalPrix = 0;
+    
         if ($user) {
             $panier = $user->getPanier();
             if ($panier) {
                 $detailsLivres = $panier->getDetails();
+                foreach ($detailsLivres as $detail) {
+                    $totalPrix += $detail->getPrix() * $detail->getQuantite();
+                }
             }
         }
-
+    
         return $this->render('panier/index.html.twig', [
             'detailsLivres' => $detailsLivres,
+            'totalPrix' => $totalPrix,
         ]);
     }
 
@@ -172,5 +183,77 @@ public function ajouterQuantite(Request $request, EntityManagerInterface $entity
         return new JsonResponse(['message' => 'Quantité diminuée avec succès']);
     }
 
-    
+    #[Route('/panier/commander', name: 'panier_commander')]
+    public function commander(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $panier = $user->getPanier();
+        if (!$panier) {
+            // Handle empty cart
+            return $this->redirectToRoute('panier_index');
+        }
+
+        Stripe::setApiKey($this->getParameter('stripe_secret_key'));
+
+        $lineItems = [];
+        foreach ($panier->getDetails() as $detailsLivre) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => [
+                        'name' => $detailsLivre->getLivre()->getTitre(),
+                    ],
+                    'unit_amount' => $detailsLivre->getPrix() * 100,
+                ],
+                'quantity' => $detailsLivre->getQuantite(),
+            ];
+        }
+
+        try {
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [$lineItems],
+                'mode' => 'payment',
+                'success_url' => $this->generateUrl('panier_commande_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
+                'cancel_url' => $this->generateUrl('panier_index', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            ]);
+
+            return $this->redirect($session->url, 303);
+        } catch (ApiErrorException $e) {
+            // Log the error
+            $this->addFlash('error', 'Une erreur est survenue lors de la création de la session de paiement. Veuillez réessayer plus tard.');
+            return $this->redirectToRoute('panier_index');
+        }
+    }
+
+    #[Route('/panier/commande-success', name: 'panier_commande_success')]
+    public function commandeSuccess(EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $panier = $user->getPanier();
+        if (!$panier) {
+            return $this->redirectToRoute('panier_index');
+        }
+
+        // Suppression des détails du panier
+        foreach ($panier->getDetails() as $detailsLivre) {
+            $entityManager->remove($detailsLivre);
+        }
+
+        $entityManager->flush();
+
+        // Afficher un message de succès
+        $this->addFlash('success', 'Votre commande a été passée avec succès !');
+
+        return $this->redirectToRoute('panier_index');
+    }
+
 }
