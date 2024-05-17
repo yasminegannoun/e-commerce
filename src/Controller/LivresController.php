@@ -53,7 +53,23 @@ class LivresController extends AbstractController
     }
 
 
+    #[Route('/admin/livres/{id}/edit', name: 'app_livre_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Livres $livre, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(LivreType::class, $livre);
+        $form->handleRequest($request);
 
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('admin_livres', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('livres/edit.html.twig', [
+            'livre' => $livre,
+            'form' => $form,
+        ]);
+    }
 
 
 
