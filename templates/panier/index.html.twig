@@ -3,86 +3,103 @@
 {% block title %}Panier{% endblock %}
 
 {% block body %}
-    <div class="row">
+    <div class="container">
         <h1>Votre Panier</h1>
-        {% for detailLivre in detailsLivres %}
-            <div class="col-md-4 mb-4 livre" data-livre="{{ detailLivre.getLivre().getId() }}">
-                <div class="card">
-                    <img src="{{ detailLivre.getLivre().getImage() }}" class="card-img-top" alt="Book Image">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-4">
                     <div class="card-body">
-                        <h5 class="card-title">{{ detailLivre.getLivre().getTitre()|capitalize }}</h5>
-                        <p class="card-text">Prix(DT): {{ detailLivre.getLivre().getPrix() }}</p>
-                        <p class="card-text">Date ajout: {{ detailLivre.getdate()|date('d-m-Y') }}</p>
-                        <h4 class="qte">Quantité</h4>  
-                        <div class="cadre">
-                            <span class="quantite">{{ detailLivre.getQuantite() }}</span>
-                            <button class="plus" data-livre="{{ detailLivre.getLivre().getId() }}">+</button>
-                            <button class="moins" data-livre="{{ detailLivre.getLivre().getId() }}">-</button>
-                        </div>
-                        <br> <br>
-                        <a href="{{ path('panier_supprimer_livre', {'id': detailLivre.getLivre().getId()}) }}" class="btn btn-danger">Supprimer</a>
-                        <a href="{{ path('panier_commander', {'id': detailLivre.id}) }}" class="btn btn-primary">Commander</a>
+                        <h5 class="card-title">Récapitulatif du panier</h5>
+                        <p class="card-text">Total: {{ totalPrix }} DT</p>
+                        {% if detailsLivres|length > 0 %}
+                            <a href="{{ path('panier_commander') }}" class="btn btn-primary">Passer votre commande</a>
+                        {% else %}
+                            <p>Votre panier est vide.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        {% endfor %}
+            <div class="col-md-9">
+                <div class="row">
+                    {% for detailLivre in detailsLivres %}
+                        <div class="col-md-6 mb-4 livre" data-livre="{{ detailLivre.getLivre().getId() }}">
+                            <div class="card h-100">
+                                <img src="{{ detailLivre.getLivre().getImage() }}" class="card-img-top" alt="Book Image">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ detailLivre.getLivre().getTitre()|capitalize }}</h5>
+                                    <p class="card-text">Prix(DT): {{ detailLivre.getLivre().getPrix() }}</p>
+                                    <p class="card-text">Date ajout: {{ detailLivre.getdate()|date('d-m-Y') }}</p>
+                                    <h4 class="qte">Quantité</h4>
+                                    <div class="cadre">
+                                        <span class="quantite">{{ detailLivre.getQuantite() }}</span>
+                                        <button class="plus" data-livre="{{ detailLivre.getLivre().getId() }}">+</button>
+                                        <button class="moins" data-livre="{{ detailLivre.getLivre().getId() }}">-</button>
+                                    </div>
+                                    <br><br>
+                                    <a href="{{ url('panier_supprimer_livre', {'id': detailLivre.getLivre().getId()}) }}" class="btn btn-danger">Supprimer</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-    const plusButtons = document.querySelectorAll('.plus');
-    const moinsButtons = document.querySelectorAll('.moins');
+            const plusButtons = document.querySelectorAll('.plus');
+            const moinsButtons = document.querySelectorAll('.moins');
 
-    plusButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const detailLivreId = this.getAttribute('data-livre');
-            augmenterQuantite(detailLivreId);
-        });
-    });
+            plusButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const detailLivreId = this.getAttribute('data-livre');
+                    augmenterQuantite(detailLivreId);
+                });
+            });
 
-    moinsButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const detailLivreId = this.getAttribute('data-livre');
-            diminuerQuantite(detailLivreId);
-        });
-    });
+            moinsButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const detailLivreId = this.getAttribute('data-livre');
+                    diminuerQuantite(detailLivreId);
+                });
+            });
 
-    function augmenterQuantite(detailLivreId) {
-        fetch(`/panier/ajouter-quantite/${detailLivreId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+            function augmenterQuantite(detailLivreId) {
+                fetch(`/panier/ajouter-quantite/${detailLivreId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector(`.livre[data-livre="${detailLivreId}"] .quantite`).textContent = data.nouvelleQuantite;
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Mettre à jour la valeur affichée dans l'élément de quantité
-            document.querySelector(`.livre[data-livre="${detailLivreId}"] .quantite`).textContent = data.nouvelleQuantite;
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-        });
-    }
 
-    function diminuerQuantite(detailLivreId) {
-        fetch(`/panier/diminuer-quantite/${detailLivreId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+            function diminuerQuantite(detailLivreId) {
+                fetch(`/panier/diminuer-quantite/${detailLivreId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector(`.livre[data-livre="${detailLivreId}"] .quantite`).textContent = data.nouvelleQuantite;
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Mettre à jour la valeur affichée dans l'élément de quantité
-            document.querySelector(`.livre[data-livre="${detailLivreId}"] .quantite`).textContent = data.nouvelleQuantite;
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
         });
-    }
-});
     </script>
 
     <style>
