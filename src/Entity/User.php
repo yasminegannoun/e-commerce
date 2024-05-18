@@ -44,7 +44,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->panier = new ArrayCollection(); //peut supprimer
+        //$this->panier = new ArrayCollection(); //peut supprimer
         $this->commandes = new ArrayCollection();
     }
 
