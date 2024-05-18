@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord{% endblock %}
+
+{% block body %}
+<h1>Tableau de Bord</h1>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Livres les plus vendus</h2>
+            <div id="topSellingBookChart" style="width: 100%; height: 400px;"></div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Nombre de Commandes</h2>
+            <div id="orderCountsChart" style="width: 100%; height: 400px;"></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    
+        function drawCharts() {
+        // Data for Top Selling Books
+        var topSellingBookData = google.visualization.arrayToDataTable([
+            ['Livre', 'Quantité'],
+            {% for book in topSellingBooks %}
+            ['{{ book.titre }}', {{ book.total }}],
+            {% endfor %}
+        ]);
+
+        var topSellingBookOptions = {
+            title: 'Livres les plus vendus',
+            pieHole: 0.4,
+            legend: { position: 'bottom' }
+        };
+
+        var topSellingBookChart = new google.visualization.PieChart(document.getElementById('topSellingBookChart'));
+        topSellingBookChart.draw(topSellingBookData, topSellingBookOptions);
+
+
+        // Data for Order Counts
+        var orderCountsData = google.visualization.arrayToDataTable([
+            ['Date', 'Nombre de Commandes'],
+            {% for count in orderCounts %}
+            ['{{ count.date|date('Y-m-d') }}', {{ count.count }}],
+            {% endfor %}
+        ]);
+
+        var orderCountsOptions = {
+            title: 'Nombre de Commandes',
+            hAxis: { title: 'Date', titleTextStyle: { color: '#333' } },
+            vAxis: { minValue: 0 },
+            legend: { position: 'bottom' },
+            seriesType: 'bars', // Type de la série principale
+            series: {1: {type: 'line'}} // Type de la série supplémentaire (optionnel)
+        };
+
+        var orderCountsChart = new google.visualization.ComboChart(document.getElementById('orderCountsChart'));
+        orderCountsChart.draw(orderCountsData, orderCountsOptions);
+    }
+    
+</script>
+{% endblock %}

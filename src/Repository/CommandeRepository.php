@@ -32,6 +32,17 @@ class CommandeRepository extends ServiceEntityRepository
         ->getResult();
 }
 
+public function findOrderCounts(): array
+    {
+        return $this->createQueryBuilder('c')
+        ->select('c.date AS date', 'COUNT(c.id) AS count')
+        ->groupBy('c.date')
+        ->getQuery()
+        ->getResult();
+    }
+
+    
+
 //    /**
 //     * @return Commande[] Returns an array of Commande objects
 //     */
