@@ -21,6 +21,19 @@ class DetailCommandeRepository extends ServiceEntityRepository
         parent::__construct($registry, DetailCommande::class);
     }
 
+
+
+    public function findTopSellingBooks(): array
+{
+    return $this->createQueryBuilder('d')
+        ->select('l.titre AS titre', 'SUM(d.quantite) AS total')
+        ->join('d.livre', 'l')
+        ->groupBy('l.id')
+        ->orderBy('total', 'DESC')
+        ->getQuery()
+        ->getResult();
+}
+
 //    /**
 //     * @return DetailCommande[] Returns an array of DetailCommande objects
 //     */
