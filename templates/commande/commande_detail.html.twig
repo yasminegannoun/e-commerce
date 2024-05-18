@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la commande{% endblock %}
+
+{% block body %}
+<h1 class="my-4">Détails de la commande #{{ commande.id }}</h1>
+
+<div class="mb-3">
+    <p><strong>Utilisateur :</strong> {{ commande.user.email }}</p>
+    <p><strong>Date :</strong> {{ commande.date|date('Y-m-d H:i:s') }}</p>
+    <p><strong>Total :</strong> {{ commande.total }} DT</p>
+    <p><strong>Status :</strong> <span class="badge badge-secondary">{{ commande.status }}</span></p>
+</div>
+
+<h2 class="my-4">Détails des articles</h2>
+<table class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Livre</th>
+            <th>Quantité</th>
+            <th>Prix</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for detail in commande.detailCommandes %}
+            <tr>
+                <td>{{ detail.getLivre().getTitre()|capitalize }}</td>
+                <td>{{ detail.getQuantite() }}</td>
+                <td>{{ detail.getPrix() }}Dt</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ path('admin_commandes') }}" class="btn btn-secondary mt-4">Retour aux commandes</a>
+{% endblock %}
