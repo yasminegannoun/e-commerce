@@ -3,15 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Commande;
-use App\Repository\CommandeRepository;
+use App\Entity\DetailCommande;
 use App\Repository\UserRepository;
 use App\Repository\PanierRepository;
-use App\Entity\DetailCommande;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Repository\CommandeRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 
 class CommandeController extends AbstractController
@@ -71,6 +72,32 @@ class CommandeController extends AbstractController
 
         return $this->render('commande/index.html.twig', [
             'commandes' => $commandes,
+        ]);
+    }
+
+    #[Route('/admin/commandes', name: 'admin_commandes')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function commandes(CommandeRepository $commandeRepository): Response
+    {
+        $commandes = $commandeRepository->findAll();
+
+        return $this->render('commande/commandes.html.twig', [
+            'commandes' => $commandes,
+        ]);
+    }
+
+    #[Route('/admin/commande/{id}', name: 'admin_commande_detail')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function commandeDetail($id, CommandeRepository $commandeRepository): Response
+    {
+        $commande = $commandeRepository->find($id);
+
+        if (!$commande) {
+            throw $this->createNotFoundException('La commande n\'existe pas');
+        }
+
+        return $this->render('commande/commande_detail.html.twig', [
+            'commande' => $commande,
         ]);
     }
 }
