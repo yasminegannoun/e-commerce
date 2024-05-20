@@ -97,18 +97,18 @@ class LivresController extends AbstractController
     #[Route('/livres/recherche', name: 'user_livres_recherche')]
     public function recherche(Request $request, LivresRepository $livresRepository, CategoriesRepository $categoriesRepository): Response
     {
-        // Get the search parameters from the request
-        $searchTerm = $request->query->get('titre') ?? ''; // Title
-        $categoryId = $request->query->get('categorie') ?? null; // Category ID
-        $author = $request->query->get('auteur') ?? ''; // Author
+       
+        $searchTerm = $request->query->get('titre') ?? '';
+        $categoryId = $request->query->get('categorie') ?? null; 
+        $author = $request->query->get('auteur') ?? '';
     
-        // Call the repository method to fetch categories
+       
         $categories = $categoriesRepository->findAll();
     
-        // Call the repository method with the search criteria
+        
         $livres = $livresRepository->findBySearchCriteria($searchTerm, $categoryId, $author);
     
-        // Return the search results and categories to the appropriate template
+       
         return $this->render('Livres/recherche.html.twig', [
             'livres' => $livres,
             'categories' => $categories,

@@ -36,7 +36,7 @@ public function findBySearchCriteria(string $searchTerm, ?int $categoryId, strin
     }
 
     if ($categoryId !== null) {
-        $queryBuilder
+        $queryBuilder 
             ->andWhere('l.categorie = :categoryId')
             ->setParameter('categoryId', $categoryId);
     }
